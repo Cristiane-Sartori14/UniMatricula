@@ -12,7 +12,7 @@ const [turmas, setTurmas] = useState([]);
     async function carregarTurmas() {
       try {
         const resposta = await fetch(
-          'http://localhost:3000/api/turmas'
+          'http://localhost:3000/api/turmas?aluno_id=1'
         );
 
         if (!resposta.ok) {
@@ -24,7 +24,7 @@ const [turmas, setTurmas] = useState([]);
         const turmasFormatadas = dados.map((turma) => ({
           ...turma,
           disciplina: turma.nome,
-          matriculado: false,
+          matriculado: Boolean(turma.matriculado),
         }));
 
         setTurmas(turmasFormatadas);
@@ -53,70 +53,27 @@ const [turmas, setTurmas] = useState([]);
     );
   });
 
-  function matricular(id) {
-    const turmaSelecionada = turmas.find(
-      (turma) => turma.id === id
-    );
-
-    if (!turmaSelecionada) return;
-
-    if (turmaSelecionada.matriculado) {
-      setMensagem('Você já está matriculado nesta turma.');
-      return;
+  async function atualizarMatricula(id, cancelar = false) {
+    try {
+      const resposta = await fetch('http://localhost:3000/api/matriculas' + (cancelar ? '/cancelar' : ''), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aluno_id: 1, turma_id: id }),
+      });
+      const dados = await resposta.json();
+      if (!resposta.ok) throw new Error(dados.mensagem);
+      setMensagem(cancelar ? 'Matr?cula cancelada com sucesso.' : 'Matr?cula realizada com sucesso.');
+      const consulta = await fetch('http://localhost:3000/api/turmas?aluno_id=1');
+      if (!consulta.ok) throw new Error('Opera??o salva. Recarregue a p?gina para atualizar a lista.');
+      const lista = await consulta.json();
+      setTurmas(lista.map(turma => ({ ...turma, disciplina: turma.nome })));
+    } catch (erro) {
+      setMensagem(erro.message);
     }
-
-    if (turmaSelecionada.vagas <= 0) {
-      setMensagem('Não há vagas disponíveis nesta turma.');
-      return;
-    }
-
-    const conflito = turmas.some(
-      (turma) =>
-        turma.matriculado &&
-        turma.id !== id &&
-        turma.dia === turmaSelecionada.dia &&
-        turma.turno === turmaSelecionada.turno
-    );
-
-    if (conflito) {
-      setMensagem(
-        'Não foi possível matricular: existe conflito de horário.'
-      );
-      return;
-    }
-
-    setTurmas((atuais) =>
-      atuais.map((turma) =>
-        turma.id === id
-          ? {
-              ...turma,
-              vagas: turma.vagas - 1,
-              matriculado: true,
-            }
-          : turma
-      )
-    );
-
-    setMensagem(
-      `Matrícula realizada em ${turmaSelecionada.disciplina}!`
-    );
   }
 
-  function cancelarMatricula(id) {
-    setTurmas((atuais) =>
-      atuais.map((turma) =>
-        turma.id === id
-          ? {
-              ...turma,
-              vagas: turma.vagas + 1,
-              matriculado: false,
-            }
-          : turma
-      )
-    );
-
-    setMensagem('Matrícula cancelada com sucesso.');
-  }
+  function matricular(id) { return atualizarMatricula(id); }
+  function cancelarMatricula(id) { return atualizarMatricula(id, true); }
 
   function navegar(destino) {
     setPagina(destino);

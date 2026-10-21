@@ -62,12 +62,8 @@ app.get('/', (req, res) => {
   res.json({ mensagem: 'API UniMatrícula funcionando!' });
 });
 
-// Agora os dados vêm do SQLite.
-app.get('/api/turmas', (req, res) => {
-  const turmas = db.prepare('SELECT * FROM turmas ORDER BY id').all();
-  res.json(turmas);
-});
-
-app.listen(PORT, () => {
-  console.log(`API UniMatrícula rodando em http://localhost:${PORT}`);
-});
+app.use('/api', require('./routes'));
+if (require.main === module) {
+  app.listen(PORT, () => console.log('API UniMatr?cula rodando em http://localhost:' + PORT));
+}
+module.exports = app;
