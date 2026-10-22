@@ -1,22 +1,23 @@
-import { useEffect, useState } from 'react';
-import './App.css';
-
+import { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
-const [turmas, setTurmas] = useState([]);
-  const [busca, setBusca] = useState('');
-  const [mensagem, setMensagem] = useState('');
-  const [pagina, setPagina] = useState('Início');
+  const [turmas, setTurmas] = useState([]);
+  const [busca, setBusca] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [pagina, setPagina] = useState("Início");
+  const [filtroDia, setFiltroDia] = useState("");
+  const [filtroTurno, setFiltroTurno] = useState("");
 
-   useEffect(() => {
+  useEffect(() => {
     async function carregarTurmas() {
       try {
         const resposta = await fetch(
-          'http://localhost:3000/api/turmas?aluno_id=1'
+          "http://localhost:3000/api/turmas?aluno_id=1",
         );
 
         if (!resposta.ok) {
-          throw new Error('Não foi possível carregar as turmas.');
+          throw new Error("Não foi possível carregar as turmas.");
         }
 
         const dados = await resposta.json();
@@ -29,55 +30,74 @@ const [turmas, setTurmas] = useState([]);
 
         setTurmas(turmasFormatadas);
       } catch (erro) {
-        console.error('Erro ao carregar turmas:', erro);
+        console.error("Erro ao carregar turmas:", erro);
         setMensagem(
-          'Não foi possível carregar as turmas. Verifique se a API está funcionando.'
+          "Não foi possível carregar as turmas. Verifique se a API está funcionando.",
         );
       }
     }
 
     carregarTurmas();
   }, []);
-  
-  const minhasTurmas = turmas.filter(
-    (turma) => turma.matriculado
-  );
+
+  const minhasTurmas = turmas.filter((turma) => turma.matriculado);
 
   const turmasFiltradas = turmas.filter((turma) => {
     const termo = busca.toLowerCase();
 
-    return (
-      turma.disciplina.toLowerCase().includes(termo) ||
-      turma.codigo.toLowerCase().includes(termo) ||
-      turma.professor.toLowerCase().includes(termo)
-    );
+    const correspondeBusca =
+      (turma.disciplina || turma.nome || "").toLowerCase().includes(termo) ||
+      (turma.codigo || "").toLowerCase().includes(termo) ||
+      (turma.professor || "").toLowerCase().includes(termo);
+
+    const correspondeDia = filtroDia === "" || turma.dia === filtroDia;
+
+    const correspondeTurno = filtroTurno === "" || turma.turno === filtroTurno;
+
+    return correspondeBusca && correspondeDia && correspondeTurno;
   });
 
   async function atualizarMatricula(id, cancelar = false) {
     try {
-      const resposta = await fetch('http://localhost:3000/api/matriculas' + (cancelar ? '/cancelar' : ''), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aluno_id: 1, turma_id: id }),
-      });
+      const resposta = await fetch(
+        "http://localhost:3000/api/matriculas" + (cancelar ? "/cancelar" : ""),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ aluno_id: 1, turma_id: id }),
+        },
+      );
       const dados = await resposta.json();
       if (!resposta.ok) throw new Error(dados.mensagem);
-      setMensagem(cancelar ? 'Matr?cula cancelada com sucesso.' : 'Matr?cula realizada com sucesso.');
-      const consulta = await fetch('http://localhost:3000/api/turmas?aluno_id=1');
-      if (!consulta.ok) throw new Error('Opera??o salva. Recarregue a p?gina para atualizar a lista.');
+      setMensagem(
+        cancelar
+          ? "Matr?cula cancelada com sucesso."
+          : "Matr?cula realizada com sucesso.",
+      );
+      const consulta = await fetch(
+        "http://localhost:3000/api/turmas?aluno_id=1",
+      );
+      if (!consulta.ok)
+        throw new Error(
+          "Opera??o salva. Recarregue a p?gina para atualizar a lista.",
+        );
       const lista = await consulta.json();
-      setTurmas(lista.map(turma => ({ ...turma, disciplina: turma.nome })));
+      setTurmas(lista.map((turma) => ({ ...turma, disciplina: turma.nome })));
     } catch (erro) {
       setMensagem(erro.message);
     }
   }
 
-  function matricular(id) { return atualizarMatricula(id); }
-  function cancelarMatricula(id) { return atualizarMatricula(id, true); }
+  function matricular(id) {
+    return atualizarMatricula(id);
+  }
+  function cancelarMatricula(id) {
+    return atualizarMatricula(id, true);
+  }
 
   function navegar(destino) {
     setPagina(destino);
-    setMensagem('');
+    setMensagem("");
   }
 
   return (
@@ -95,17 +115,13 @@ const [turmas, setTurmas] = useState([]);
 
         <nav className="navigation">
           {[
-            { nome: 'Início', icone: '⌂' },
-            { nome: 'Ofertas de turmas', icone: '▤' },
-            { nome: 'Minha grade', icone: '▦' },
+            { nome: "Início", icone: "⌂" },
+            { nome: "Ofertas de turmas", icone: "▤" },
+            { nome: "Minha grade", icone: "▦" },
           ].map((item) => (
             <button
               key={item.nome}
-              className={
-                pagina === item.nome
-                  ? 'nav-item active'
-                  : 'nav-item'
-              }
+              className={pagina === item.nome ? "nav-item active" : "nav-item"}
               onClick={() => navegar(item.nome)}
             >
               <span>{item.icone}</span>
@@ -126,14 +142,8 @@ const [turmas, setTurmas] = useState([]);
       <main className="main-content">
         <header className="topbar">
           <div>
-            <span className="breadcrumb">
-              Portal acadêmico / {pagina}
-            </span>
-            <h1>
-              {pagina === 'Início'
-                ? 'Visão geral'
-                : pagina}
-            </h1>
+            <span className="breadcrumb">Portal acadêmico / {pagina}</span>
+            <h1>{pagina === "Início" ? "Visão geral" : pagina}</h1>
           </div>
 
           <div className="semester">
@@ -147,7 +157,7 @@ const [turmas, setTurmas] = useState([]);
             {mensagem}
             <button
               className="close-feedback"
-              onClick={() => setMensagem('')}
+              onClick={() => setMensagem("")}
               aria-label="Fechar mensagem"
             >
               ×
@@ -155,22 +165,18 @@ const [turmas, setTurmas] = useState([]);
           </div>
         )}
 
-        {pagina !== 'Minha grade' && (
+        {pagina !== "Minha grade" && (
           <section className="welcome">
             <div>
-              <span className="eyebrow">
-                SISTEMA DE MATRÍCULAS
-              </span>
-              <h2>
-                Olá, estudante! 👋
-              </h2>
+              <span className="eyebrow">SISTEMA DE MATRÍCULAS</span>
+              <h2>Olá, estudante! 👋</h2>
               <p>
-                Consulte as ofertas e organize sua grade
-                acadêmica para este semestre.
+                Consulte as ofertas e organize sua grade acadêmica para este
+                semestre.
               </p>
               <button
                 className="primary-button"
-                onClick={() => navegar('Ofertas de turmas')}
+                onClick={() => navegar("Ofertas de turmas")}
               >
                 Consultar ofertas <span>→</span>
               </button>
@@ -206,17 +212,14 @@ const [turmas, setTurmas] = useState([]);
             <div>
               <span>Vagas disponíveis</span>
               <strong>
-                {turmas.reduce(
-                  (total, turma) => total + turma.vagas,
-                  0
-                )}
+                {turmas.reduce((total, turma) => total + turma.vagas, 0)}
               </strong>
               <small>Nas turmas ofertadas</small>
             </div>
           </article>
         </section>
 
-        {pagina === 'Minha grade' ? (
+        {pagina === "Minha grade" ? (
           <section className="panel">
             <div className="panel-heading">
               <div>
@@ -230,12 +233,12 @@ const [turmas, setTurmas] = useState([]);
                 <span>▦</span>
                 <h3>Nenhuma matrícula realizada</h3>
                 <p>
-                  Consulte as ofertas para selecionar suas
-                  primeiras disciplinas.
+                  Consulte as ofertas para selecionar suas primeiras
+                  disciplinas.
                 </p>
                 <button
                   className="primary-button"
-                  onClick={() => navegar('Ofertas de turmas')}
+                  onClick={() => navegar("Ofertas de turmas")}
                 >
                   Ver ofertas
                 </button>
@@ -247,8 +250,7 @@ const [turmas, setTurmas] = useState([]);
                     <div>
                       <strong>{turma.disciplina}</strong>
                       <p>
-                        {turma.dia} · {turma.turno} ·{' '}
-                        {turma.horario}
+                        {turma.dia} · {turma.turno} · {turma.horario}
                       </p>
                       <small>Professor: {turma.professor}</small>
                     </div>
@@ -268,13 +270,11 @@ const [turmas, setTurmas] = useState([]);
             <div className="panel-heading">
               <div>
                 <h2>
-                  {pagina === 'Início'
-                    ? 'Ofertas em destaque'
-                    : 'Ofertas de turmas'}
+                  {pagina === "Início"
+                    ? "Ofertas em destaque"
+                    : "Ofertas de turmas"}
                 </h2>
-                <p>
-                  Consulte horários, professores e vagas.
-                </p>
+                <p>Consulte horários, professores e vagas.</p>
               </div>
 
               <label className="search-box">
@@ -286,6 +286,31 @@ const [turmas, setTurmas] = useState([]);
                   onChange={(event) => setBusca(event.target.value)}
                 />
               </label>
+            </div>
+
+            <div className="filtros">
+              <select
+                value={filtroDia}
+                onChange={(e) => setFiltroDia(e.target.value)}
+              >
+                <option value="">Todos os dias</option>
+                <option value="Segunda-feira">Segunda-feira</option>
+                <option value="Terça-feira">Terça-feira</option>
+                <option value="Quarta-feira">Quarta-feira</option>
+                <option value="Quinta-feira">Quinta-feira</option>
+                <option value="Sexta-feira">Sexta-feira</option>
+                <option value="Sábado">Sábado</option>
+              </select>
+
+              <select
+                value={filtroTurno}
+                onChange={(e) => setFiltroTurno(e.target.value)}
+              >
+                <option value="">Todos os turnos</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noite">Noite</option>
+              </select>
             </div>
 
             <div className="table-wrapper">
@@ -305,9 +330,7 @@ const [turmas, setTurmas] = useState([]);
                     <tr key={turma.id}>
                       <td>
                         <strong>{turma.disciplina}</strong>
-                        <span className="course-code">
-                          {turma.codigo}
-                        </span>
+                        <span className="course-code">{turma.codigo}</span>
                       </td>
                       <td>{turma.professor}</td>
                       <td>
@@ -320,21 +343,16 @@ const [turmas, setTurmas] = useState([]);
                         <span
                           className={
                             turma.vagas > 0
-                              ? 'vacancy available'
-                              : 'vacancy unavailable'
+                              ? "vacancy available"
+                              : "vacancy unavailable"
                           }
                         >
-                          {turma.vagas > 0
-                            ? `${turma.vagas} vagas`
-                            : 'Lotada'}
+                          {turma.vagas > 0 ? `${turma.vagas} vagas` : "Lotada"}
                         </span>
                       </td>
                       <td>
                         {turma.matriculado ? (
-                          <button
-                            className="enrolled-button"
-                            disabled
-                          >
+                          <button className="enrolled-button" disabled>
                             Matriculado ✓
                           </button>
                         ) : (
@@ -343,9 +361,7 @@ const [turmas, setTurmas] = useState([]);
                             disabled={turma.vagas === 0}
                             onClick={() => matricular(turma.id)}
                           >
-                            {turma.vagas === 0
-                              ? 'Sem vagas'
-                              : 'Matricular'}
+                            {turma.vagas === 0 ? "Sem vagas" : "Matricular"}
                           </button>
                         )}
                       </td>
@@ -364,8 +380,7 @@ const [turmas, setTurmas] = useState([]);
             </div>
 
             <div className="table-footer">
-              Exibindo {turmasFiltradas.length} de {turmas.length}{' '}
-              turmas
+              Exibindo {turmasFiltradas.length} de {turmas.length} turmas
             </div>
           </section>
         )}
