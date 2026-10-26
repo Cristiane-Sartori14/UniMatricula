@@ -17,6 +17,27 @@ router.get('/turmas', (req, res) => {
     WHERE m.turma_id = t.id AND m.aluno_id = ? AND m.cancelada_em IS NULL) AS matriculado
     FROM turmas t ORDER BY t.id`).all(key).map(t => ({ ...t, matriculado: Boolean(t.matriculado) })));
 });
+const DIAS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+const TURNOS = ['Manhã', 'Tarde', 'Noite'];
+function texto(value, campo) {
+  if (typeof value !== 'string' || !value.trim()) fail(400, `Informe o campo ${campo}.`);
+  return value.trim();
+}
+router.post('/turmas', (req, res) => {
+  const b = req.body || {};
+  const turma = {
+    codigo: texto(b.codigo, 'código').toUpperCase(), nome: texto(b.nome, 'disciplina'),
+    professor: texto(b.professor, 'professor'), dia: texto(b.dia, 'dia'),
+    turno: texto(b.turno, 'turno'), horario: texto(b.horario, 'horário'), vagas: Number(b.vagas),
+  };
+  if (!DIAS.includes(turma.dia)) fail(400, 'Dia inválido.');
+  if (!TURNOS.includes(turma.turno)) fail(400, 'Turno inválido.');
+  if (!/^\d+$/.test(String(b.vagas)) || turma.vagas > 500) fail(400, 'Vagas deve ser um número inteiro entre 0 e 500.');
+  if (db.prepare('SELECT id FROM turmas WHERE codigo = ?').get(turma.codigo)) fail(409, 'Já existe uma turma com este código.');
+  const result = db.prepare(`INSERT INTO turmas (codigo, nome, professor, dia, turno, horario, vagas)
+    VALUES (@codigo, @nome, @professor, @dia, @turno, @horario, @vagas)`).run(turma);
+  res.status(201).json(db.prepare('SELECT * FROM turmas WHERE id = ?').get(result.lastInsertRowid));
+});
 router.get('/alunos/:id/matriculas', (req, res) => {
   res.json(db.prepare(`SELECT m.id AS matricula_id, m.criada_em, t.* FROM matriculas m
     JOIN turmas t ON t.id = m.turma_id WHERE m.aluno_id = ? AND m.cancelada_em IS NULL

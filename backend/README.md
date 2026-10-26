@@ -20,12 +20,15 @@ Testes do backend: `npm.cmd test`, dentro de backend. Usam um banco temporário.
 | GET | /api/alunos | Alunos cadastrados |
 | GET | /api/turmas | Todas as ofertas |
 | GET | /api/turmas?aluno_id=1 | Ofertas com indicador matriculado do aluno |
+| POST | /api/turmas | Cria nova oferta (área institucional) |
 | GET | /api/alunos/1/matriculas | Turmas com matrícula ativa do aluno |
 | POST | /api/matriculas | Cria matrícula e reduz uma vaga |
 | POST | /api/matriculas/cancelar | Cancela matrícula e devolve uma vaga |
 | GET | /api/institucional | Resumo, ocupação por turma, alunos por matrícula e histórico |
 
-Os dois POST recebem JSON: `{ "aluno_id": 1, "turma_id": 1 }`.
+Os POST de matrícula recebem JSON: `{ "aluno_id": 1, "turma_id": 1 }`.
+O POST de turmas recebe `codigo`, `nome`, `professor`, `dia`, `turno`, `horario` e `vagas`
+(inteiro de 0 a 500). Código repetido retorna 409; campos inválidos, 400.
 Sucesso: 201 para criação, 200 para cancelamento e consultas.
 Erros retornam `{ "mensagem": "..." }`: 400 para identificador inválido,
 404 para registro inexistente, 409 para duplicidade, falta de vagas ou conflito.
@@ -40,7 +43,6 @@ Não há dados de ocupação anteriores aos registros deste projeto.
 ## Limites do protótipo
 
 A interface usa o aluno de demonstração de id 1. Não há autenticação ou controle
-de acesso; os identificadores enviados não comprovam identidade. A tela institucional
-não foi criada: estas rotas fornecem os dados para sua implementação.
-Não foram incluídos cadastro de cursos ou CRUD de turmas, pois não fazem parte
- destas operações. DATABASE_PATH permite escolher outro arquivo SQLite em testes.
+de acesso; os identificadores enviados não comprovam identidade, e a área institucional
+fica aberta a qualquer usuário da interface. Turmas podem ser criadas, mas não editadas
+ou removidas; cadastro de cursos não foi incluído. DATABASE_PATH permite escolher outro arquivo SQLite em testes.

@@ -647,3 +647,155 @@ input:focus-visible {
   font-size: 14px;
   cursor: pointer;
 }
+/* Área institucional */
+.admin-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat-icon.purple {
+  color: #7c4dda;
+  background: #f3edff;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.admin-tab {
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-tab:hover,
+.admin-tab.active {
+  border-color: #c9d6fb;
+  color: #2855d9;
+  background: #edf2ff;
+}
+
+.admin-tab.active {
+  font-weight: 700;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-filtros {
+  margin: 0;
+  padding: 0 24px 18px;
+}
+
+.occupancy {
+  min-width: 140px;
+}
+
+.occupancy-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #edf0f5;
+}
+
+.occupancy-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #315bd5;
+}
+
+.occupancy-fill.full {
+  background: #b42318;
+}
+
+.view-button {
+  cursor: pointer;
+}
+
+.view-button:hover {
+  background: #d5f2e2;
+}
+
+.offer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0 24px 24px;
+}
+
+.offer-form label {
+  display: grid;
+  gap: 7px;
+  color: #26354e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.offer-form input,
+.offer-form select {
+  padding: 10px 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 6px;
+  color: #263449;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.offer-form input:focus-visible,
+.offer-form select:focus-visible {
+  outline: 2px solid #315bd5;
+  outline-offset: 1px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 11px 16px;
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .navigation {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .admin-stats,
+  .offer-form {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-filtros {
+    padding: 0 16px 16px;
+  }
+
+  .offer-form {
+    padding: 0 16px 20px;
+  }
+}
