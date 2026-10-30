@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import Cadastros from "./Cadastros";
+import SelecaoCadastro from "./SelecaoCadastro";
 
 const DIAS = [
   "Segunda-feira",
@@ -178,7 +180,7 @@ function AreaInstitucional({ setMensagem, aoCriarOferta }) {
       </section>
 
       <div className="admin-tabs" role="tablist">
-        {["Ofertas e vagas", "Alunos matriculados", "Nova oferta"].map(
+        {["Ofertas e vagas", "Alunos matriculados", "Nova oferta", "Cadastros"].map(
           (item) => (
             <button
               key={item}
@@ -412,6 +414,8 @@ function AreaInstitucional({ setMensagem, aoCriarOferta }) {
         </section>
       )}
 
+      {aba === "Cadastros" && <Cadastros />}
+
       {aba === "Nova oferta" && (
         <section className="panel">
           <div className="panel-heading">
@@ -435,7 +439,8 @@ function AreaInstitucional({ setMensagem, aoCriarOferta }) {
 
             <label>
               Disciplina
-              <input
+              <SelecaoCadastro
+                tipo="disciplinas"
                 name="nome"
                 placeholder="Ex.: Programação Orientada a Objetos"
                 value={novaOferta.nome}
@@ -446,7 +451,8 @@ function AreaInstitucional({ setMensagem, aoCriarOferta }) {
 
             <label>
               Professor
-              <input
+              <SelecaoCadastro
+                tipo="professores"
                 name="professor"
                 placeholder="Nome do professor"
                 value={novaOferta.professor}

@@ -1,0 +1,57 @@
+.cadastro-consulta {
+  margin-top: 24px;
+}
+
+.cadastros .cadastro-acoes {
+  grid-column: 1 / -1;
+}
+
+.cadastros input {
+  min-width: 0;
+}
+
+.cadastro-mensagem {
+  margin: 0 24px 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.cadastro-mensagem[role="status"] {
+  color: #176c43;
+  background: #eefaf2;
+}
+
+.cadastro-mensagem[role="alert"] {
+  color: #b42318;
+  background: #ffebe9;
+}
+
+.cadastro-aviso {
+  padding: 0 24px 20px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.cadastros td {
+  overflow-wrap: anywhere;
+}
+
+.cadastros .cadastro-codigo {
+  white-space: nowrap;
+}
+
+.cadastro-repetir {
+  border: 0;
+  background: transparent;
+  color: #2855d9;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .cadastro-mensagem {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+}

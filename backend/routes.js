@@ -1,5 +1,6 @@
 ﻿const db = require('./database');
 const router = require('express').Router();
+router.use(require('./cadastros'));
 function fail(status, mensagem) { const e = new Error(mensagem); e.status = status; throw e; }
 function id(value) {
   if (!/^\d+$/.test(String(value)) || !Number.isSafeInteger(Number(value)) || Number(value) < 1) fail(400, 'Identificador inválido.');
