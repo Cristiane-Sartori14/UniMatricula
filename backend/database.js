@@ -35,7 +35,30 @@ db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS matricula_ativa_unica
     ON matriculas(aluno_id, turma_id) WHERE cancelada_em IS NULL;
   CREATE INDEX IF NOT EXISTS matriculas_por_turma ON matriculas(turma_id);
-  INSERT OR IGNORE INTO alunos (id, nome, registro) VALUES (1, 'Aluno Exemplo', 'AL001');
+  INSERT OR IGNORE INTO alunos (id, nome, registro) VALUES (1, 'Silvio Santos', 'AL001');
 `);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    senha TEXT NOT NULL,
+    perfil TEXT NOT NULL DEFAULT 'aluno'
+  );
+`);
+
+const inserirUsuario = db.prepare(`
+  INSERT OR IGNORE INTO usuarios (id, nome, email, senha, perfil)
+  VALUES (@id, @nome, @email, @senha, @perfil)
+`);
+
+inserirUsuario.run({
+  id: 1,
+  nome: 'Silvio Santos',
+  email: 'silvio.santos@unimatricula.edu.br',
+  senha: '123456',
+  perfil: 'aluno',
+});
 
 module.exports = db;

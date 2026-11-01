@@ -86,4 +86,24 @@ router.use((erro, req, res, next) => {
   if (!erro.status) console.error(erro);
   res.status(erro.status || 500).json({ mensagem: erro.status ? erro.message : 'Erro interno.' });
 });
+
+// POST /api/login
+router.post('/login', (req, res) => {
+  const { email, senha } = req.body || {};
+
+  if (!email || !senha) {
+    return res.status(400).json({ mensagem: 'Informe e-mail e senha.' });
+  }
+
+  const usuario = db
+    .prepare('SELECT id, nome, email, perfil FROM usuarios WHERE email = ? AND senha = ?')
+    .get(email.trim().toLowerCase(), senha);
+
+  if (!usuario) {
+    return res.status(401).json({ mensagem: 'E-mail ou senha inválidos.' });
+  }
+
+  return res.status(200).json({ usuario });
+});
+
 module.exports = router;

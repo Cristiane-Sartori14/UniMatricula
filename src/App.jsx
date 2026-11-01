@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import AreaInstitucional from "./AreaInstitucional";
+import Login from "./Login";
 
 function App() {
   const [turmas, setTurmas] = useState([]);
@@ -10,37 +11,36 @@ function App() {
   const [filtroDia, setFiltroDia] = useState("");
   const [filtroTurno, setFiltroTurno] = useState("");
   const [versaoOfertas, setVersaoOfertas] = useState(0);
+  const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
-    async function carregarTurmas() {
-      try {
-        const resposta = await fetch(
-          "http://localhost:3000/api/turmas?aluno_id=1",
-        );
+  async function carregarTurmas() {
+    if (!usuario) return;
 
-        if (!resposta.ok) {
-          throw new Error("Não foi possível carregar as turmas.");
-        }
+    try {
+      const resposta = await fetch(
+        `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`
+      );
 
-        const dados = await resposta.json();
-
-        const turmasFormatadas = dados.map((turma) => ({
-          ...turma,
-          disciplina: turma.nome,
-          matriculado: Boolean(turma.matriculado),
-        }));
-
-        setTurmas(turmasFormatadas);
-      } catch (erro) {
-        console.error("Erro ao carregar turmas:", erro);
-        setMensagem(
-          "Não foi possível carregar as turmas. Verifique se a API está funcionando.",
-        );
+      if (!resposta.ok) {
+        throw new Error("Não foi possível carregar as turmas.");
       }
-    }
 
-    carregarTurmas();
-  }, [versaoOfertas]);
+      const dados = await resposta.json();
+
+      const turmasFormatadas = dados.map((turma) => ({
+        ...turma,
+        disciplina: turma.nome,
+      }));
+
+      setTurmas(turmasFormatadas);
+    } catch (e) {
+      setMensagem(e.message || "Falha ao carregar as turmas.");
+    }
+  }
+
+  carregarTurmas();
+}, [usuario]);
 
   const minhasTurmas = turmas.filter((turma) => turma.matriculado);
 
@@ -66,7 +66,7 @@ function App() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ aluno_id: 1, turma_id: id }),
+          body: JSON.stringify({ aluno_id: usuario.id, turma_id: id }),
         },
       );
       const dados = await resposta.json();
@@ -102,6 +102,9 @@ function App() {
     setMensagem("");
   }
 
+  if (!usuario) {
+  return <Login onEntrar={setUsuario} />;
+}
   return (
     <div className="app">
       <aside className="sidebar">
@@ -134,9 +137,16 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="avatar">AL</div>
+          <div className="avatar">
+                {usuario.nome
+                  .split(" ")
+                  .map((parte) => parte[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()}
+          </div>
           <div>
-            <strong>Aluno Exemplo</strong>
+            <strong>{usuario.nome}</strong>
             <span>Curso de ADS</span>
           </div>
         </div>
@@ -152,6 +162,13 @@ function App() {
           <div className="semester">
             <span className="status-dot" />
             Semestre 2026/2
+          </div>
+          
+          <div className="usuario-logado">
+            <span>{usuario.nome}</span>
+            <button type="button" className="btn-sair" onClick={() => setUsuario(null)}>
+              Sair
+            </button>
           </div>
         </header>
 
