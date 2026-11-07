@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import AreaInstitucional from "./AreaInstitucional";
 import Login from "./Login";
+import PainelInicio from "./PainelInicio";
 
 function App() {
   const [turmas, setTurmas] = useState([]);
@@ -14,33 +15,33 @@ function App() {
   const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
-  async function carregarTurmas() {
-    if (!usuario) return;
+    async function carregarTurmas() {
+      if (!usuario) return;
 
-    try {
-      const resposta = await fetch(
-        `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`
-      );
+      try {
+        const resposta = await fetch(
+          `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`
+        );
 
-      if (!resposta.ok) {
-        throw new Error("Não foi possível carregar as turmas.");
+        if (!resposta.ok) {
+          throw new Error("Não foi possível carregar as turmas.");
+        }
+
+        const dados = await resposta.json();
+
+        const turmasFormatadas = dados.map((turma) => ({
+          ...turma,
+          disciplina: turma.nome,
+        }));
+
+        setTurmas(turmasFormatadas);
+      } catch (e) {
+        setMensagem(e.message || "Falha ao carregar as turmas.");
       }
-
-      const dados = await resposta.json();
-
-      const turmasFormatadas = dados.map((turma) => ({
-        ...turma,
-        disciplina: turma.nome,
-      }));
-
-      setTurmas(turmasFormatadas);
-    } catch (e) {
-      setMensagem(e.message || "Falha ao carregar as turmas.");
     }
-  }
 
-  carregarTurmas();
-}, [usuario]);
+    carregarTurmas();
+  }, [usuario, versaoOfertas]);
 
   const minhasTurmas = turmas.filter((turma) => turma.matriculado);
 
@@ -53,7 +54,6 @@ function App() {
       (turma.professor || "").toLowerCase().includes(termo);
 
     const correspondeDia = filtroDia === "" || turma.dia === filtroDia;
-
     const correspondeTurno = filtroTurno === "" || turma.turno === filtroTurno;
 
     return correspondeBusca && correspondeDia && correspondeTurno;
@@ -67,22 +67,28 @@ function App() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ aluno_id: usuario.id, turma_id: id }),
-        },
+        }
       );
+
       const dados = await resposta.json();
       if (!resposta.ok) throw new Error(dados.mensagem);
+
       setMensagem(
         cancelar
           ? "Matrícula cancelada com sucesso."
-          : "Matrícula realizada com sucesso.",
+          : "Matrícula realizada com sucesso."
       );
+
       const consulta = await fetch(
-        `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`,
+        `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`
       );
-      if (!consulta.ok)
+
+      if (!consulta.ok) {
         throw new Error(
-          "Operação salva. Recarregue a página para atualizar a lista.",
+          "Operação salva. Recarregue a página para atualizar a lista."
         );
+      }
+
       const lista = await consulta.json();
       setTurmas(lista.map((turma) => ({ ...turma, disciplina: turma.nome })));
     } catch (erro) {
@@ -93,6 +99,7 @@ function App() {
   function matricular(id) {
     return atualizarMatricula(id);
   }
+
   function cancelarMatricula(id) {
     return atualizarMatricula(id, true);
   }
@@ -103,8 +110,9 @@ function App() {
   }
 
   if (!usuario) {
-  return <Login onEntrar={setUsuario} />;
-}
+    return <Login onEntrar={setUsuario} />;
+  }
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -138,12 +146,13 @@ function App() {
 
         <div className="sidebar-footer">
           <div className="avatar">
-                {usuario.nome
-                  .split(" ")
-                  .map((parte) => parte[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase()}
+            {usuario.nome
+              .split(" ")
+              .filter(Boolean)
+              .map((parte) => parte[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase()}
           </div>
           <div>
             <strong>{usuario.nome}</strong>
@@ -163,10 +172,14 @@ function App() {
             <span className="status-dot" />
             Semestre 2026/2
           </div>
-          
+
           <div className="usuario-logado">
             <span>{usuario.nome}</span>
-            <button type="button" className="btn-sair" onClick={() => setUsuario(null)}>
+            <button
+              type="button"
+              className="btn-sair"
+              onClick={() => setUsuario(null)}
+            >
               Sair
             </button>
           </div>
@@ -185,233 +198,184 @@ function App() {
           </div>
         )}
 
-        {pagina === "Área institucional" ? (
-          <AreaInstitucional
-            setMensagem={setMensagem}
-            aoCriarOferta={() => setVersaoOfertas((atual) => atual + 1)}
+        {pagina === "Início" && (
+          <PainelInicio
+            usuario={usuario}
+            turmas={turmas}
+            minhasTurmas={minhasTurmas}
+            aoNavegar={navegar}
           />
-        ) : (
-          <>
-          {pagina !== "Minha grade" && (
-            <section className="welcome">
+        )}
+
+        {pagina === "Ofertas de turmas" && (
+          <section className="panel">
+            <div className="panel-heading">
               <div>
-                <span className="eyebrow">SISTEMA DE MATRÍCULAS</span>
-                <h2>Olá, estudante! 👋</h2>
+                <h2>Ofertas de turmas</h2>
+                <p>Consulte horários, professores e vagas.</p>
+              </div>
+
+              <label className="search-box">
+                <span>⌕</span>
+                <input
+                  type="search"
+                  placeholder="Buscar disciplina..."
+                  value={busca}
+                  onChange={(event) => setBusca(event.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="filtros">
+              <select
+                value={filtroDia}
+                onChange={(e) => setFiltroDia(e.target.value)}
+              >
+                <option value="">Todos os dias</option>
+                <option value="Segunda-feira">Segunda-feira</option>
+                <option value="Terça-feira">Terça-feira</option>
+                <option value="Quarta-feira">Quarta-feira</option>
+                <option value="Quinta-feira">Quinta-feira</option>
+                <option value="Sexta-feira">Sexta-feira</option>
+                <option value="Sábado">Sábado</option>
+              </select>
+
+              <select
+                value={filtroTurno}
+                onChange={(e) => setFiltroTurno(e.target.value)}
+              >
+                <option value="">Todos os turnos</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noite">Noite</option>
+              </select>
+            </div>
+
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>DISCIPLINA</th>
+                    <th>PROFESSOR</th>
+                    <th>HORÁRIO</th>
+                    <th>VAGAS</th>
+                    <th>AÇÃO</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {turmasFiltradas.map((turma) => (
+                    <tr key={turma.id}>
+                      <td>
+                        <strong>{turma.disciplina}</strong>
+                        <span className="course-code">{turma.codigo}</span>
+                      </td>
+                      <td>{turma.professor}</td>
+                      <td>
+                        <span>{turma.dia}</span>
+                        <span className="course-code">
+                          {turma.turno} · {turma.horario}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={
+                            turma.vagas > 0
+                              ? "vacancy available"
+                              : "vacancy unavailable"
+                          }
+                        >
+                          {turma.vagas > 0 ? `${turma.vagas} vagas` : "Lotada"}
+                        </span>
+                      </td>
+                      <td>
+                        {turma.matriculado ? (
+                          <button className="enrolled-button" disabled>
+                            Matriculado ✓
+                          </button>
+                        ) : (
+                          <button
+                            className="enroll-button"
+                            disabled={turma.vagas === 0}
+                            onClick={() => matricular(turma.id)}
+                          >
+                            {turma.vagas === 0 ? "Sem vagas" : "Matricular"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {turmasFiltradas.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="no-results">
+                        Nenhuma turma encontrada.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="table-footer">
+              Exibindo {turmasFiltradas.length} de {turmas.length} turmas
+            </div>
+          </section>
+        )}
+
+        {pagina === "Minha grade" && (
+          <section className="panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Minha grade acadêmica</h2>
+                <p>Turmas em que você está matriculado.</p>
+              </div>
+            </div>
+
+            {minhasTurmas.length === 0 ? (
+              <div className="empty-state">
+                <span>▦</span>
+                <h3>Nenhuma matrícula realizada</h3>
                 <p>
-                  Consulte as ofertas e organize sua grade acadêmica para este
-                  semestre.
+                  Consulte as ofertas para selecionar suas primeiras
+                  disciplinas.
                 </p>
                 <button
                   className="primary-button"
                   onClick={() => navegar("Ofertas de turmas")}
                 >
-                  Consultar ofertas <span>→</span>
+                  Ver ofertas
                 </button>
               </div>
-
-              <div className="welcome-decoration" aria-hidden="true">
-                <div className="decoration-circle">U</div>
+            ) : (
+              <div className="course-list">
+                {minhasTurmas.map((turma) => (
+                  <article className="course-card" key={turma.id}>
+                    <div>
+                      <strong>{turma.disciplina}</strong>
+                      <p>
+                        {turma.dia} · {turma.turno} · {turma.horario}
+                      </p>
+                      <small>Professor: {turma.professor}</small>
+                    </div>
+                    <button
+                      className="cancel-button"
+                      onClick={() => cancelarMatricula(turma.id)}
+                    >
+                      Cancelar
+                    </button>
+                  </article>
+                ))}
               </div>
-            </section>
-          )}
-
-          <section className="stats">
-            <article className="stat-card">
-              <div className="stat-icon blue">▤</div>
-              <div>
-                <span>Turmas ofertadas</span>
-                <strong>{turmas.length}</strong>
-                <small>Neste semestre</small>
-              </div>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon green">✓</div>
-              <div>
-                <span>Minhas matrículas</span>
-                <strong>{minhasTurmas.length}</strong>
-                <small>Turmas selecionadas</small>
-              </div>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon orange">▦</div>
-              <div>
-                <span>Vagas disponíveis</span>
-                <strong>
-                  {turmas.reduce((total, turma) => total + turma.vagas, 0)}
-                </strong>
-                <small>Nas turmas ofertadas</small>
-              </div>
-            </article>
+            )}
           </section>
+        )}
 
-          {pagina === "Minha grade" ? (
-            <section className="panel">
-              <div className="panel-heading">
-                <div>
-                  <h2>Minha grade acadêmica</h2>
-                  <p>Turmas em que você está matriculado.</p>
-                </div>
-              </div>
-
-              {minhasTurmas.length === 0 ? (
-                <div className="empty-state">
-                  <span>▦</span>
-                  <h3>Nenhuma matrícula realizada</h3>
-                  <p>
-                    Consulte as ofertas para selecionar suas primeiras
-                    disciplinas.
-                  </p>
-                  <button
-                    className="primary-button"
-                    onClick={() => navegar("Ofertas de turmas")}
-                  >
-                    Ver ofertas
-                  </button>
-                </div>
-              ) : (
-                <div className="course-list">
-                  {minhasTurmas.map((turma) => (
-                    <article className="course-card" key={turma.id}>
-                      <div>
-                        <strong>{turma.disciplina}</strong>
-                        <p>
-                          {turma.dia} · {turma.turno} · {turma.horario}
-                        </p>
-                        <small>Professor: {turma.professor}</small>
-                      </div>
-                      <button
-                        className="cancel-button"
-                        onClick={() => cancelarMatricula(turma.id)}
-                      >
-                        Cancelar
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          ) : (
-            <section className="panel">
-              <div className="panel-heading">
-                <div>
-                  <h2>
-                    {pagina === "Início"
-                      ? "Ofertas em destaque"
-                      : "Ofertas de turmas"}
-                  </h2>
-                  <p>Consulte horários, professores e vagas.</p>
-                </div>
-
-                <label className="search-box">
-                  <span>⌕</span>
-                  <input
-                    type="search"
-                    placeholder="Buscar disciplina..."
-                    value={busca}
-                    onChange={(event) => setBusca(event.target.value)}
-                  />
-                </label>
-              </div>
-
-              <div className="filtros">
-                <select
-                  value={filtroDia}
-                  onChange={(e) => setFiltroDia(e.target.value)}
-                >
-                  <option value="">Todos os dias</option>
-                  <option value="Segunda-feira">Segunda-feira</option>
-                  <option value="Terça-feira">Terça-feira</option>
-                  <option value="Quarta-feira">Quarta-feira</option>
-                  <option value="Quinta-feira">Quinta-feira</option>
-                  <option value="Sexta-feira">Sexta-feira</option>
-                  <option value="Sábado">Sábado</option>
-                </select>
-
-                <select
-                  value={filtroTurno}
-                  onChange={(e) => setFiltroTurno(e.target.value)}
-                >
-                  <option value="">Todos os turnos</option>
-                  <option value="Manhã">Manhã</option>
-                  <option value="Tarde">Tarde</option>
-                  <option value="Noite">Noite</option>
-                </select>
-              </div>
-
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>DISCIPLINA</th>
-                      <th>PROFESSOR</th>
-                      <th>HORÁRIO</th>
-                      <th>VAGAS</th>
-                      <th>AÇÃO</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {turmasFiltradas.map((turma) => (
-                      <tr key={turma.id}>
-                        <td>
-                          <strong>{turma.disciplina}</strong>
-                          <span className="course-code">{turma.codigo}</span>
-                        </td>
-                        <td>{turma.professor}</td>
-                        <td>
-                          <span>{turma.dia}</span>
-                          <span className="course-code">
-                            {turma.turno} · {turma.horario}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              turma.vagas > 0
-                                ? "vacancy available"
-                                : "vacancy unavailable"
-                            }
-                          >
-                            {turma.vagas > 0 ? `${turma.vagas} vagas` : "Lotada"}
-                          </span>
-                        </td>
-                        <td>
-                          {turma.matriculado ? (
-                            <button className="enrolled-button" disabled>
-                              Matriculado ✓
-                            </button>
-                          ) : (
-                            <button
-                              className="enroll-button"
-                              disabled={turma.vagas === 0}
-                              onClick={() => matricular(turma.id)}
-                            >
-                              {turma.vagas === 0 ? "Sem vagas" : "Matricular"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-
-                    {turmasFiltradas.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="no-results">
-                          Nenhuma turma encontrada.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="table-footer">
-                Exibindo {turmasFiltradas.length} de {turmas.length} turmas
-              </div>
-            </section>
-          )}
-          </>
+        {pagina === "Área institucional" && (
+          <AreaInstitucional
+            setMensagem={setMensagem}
+            aoCriarOferta={() => setVersaoOfertas((atual) => atual + 1)}
+          />
         )}
 
         <footer className="footer">
