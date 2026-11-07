@@ -73,15 +73,15 @@ function App() {
       if (!resposta.ok) throw new Error(dados.mensagem);
       setMensagem(
         cancelar
-          ? "Matr?cula cancelada com sucesso."
-          : "Matr?cula realizada com sucesso.",
+          ? "Matrícula cancelada com sucesso."
+          : "Matrícula realizada com sucesso.",
       );
       const consulta = await fetch(
-        "http://localhost:3000/api/turmas?aluno_id=1",
+        `http://localhost:3000/api/turmas?aluno_id=${usuario.id}`,
       );
       if (!consulta.ok)
         throw new Error(
-          "Opera??o salva. Recarregue a p?gina para atualizar a lista.",
+          "Operação salva. Recarregue a página para atualizar a lista.",
         );
       const lista = await consulta.json();
       setTurmas(lista.map((turma) => ({ ...turma, disciplina: turma.nome })));

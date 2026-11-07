@@ -64,6 +64,6 @@ app.get('/', (req, res) => {
 
 app.use('/api', require('./routes'));
 if (require.main === module) {
-  app.listen(PORT, () => console.log('API UniMatr?cula rodando em http://localhost:' + PORT));
+  app.listen(PORT, () => console.log('API UniMatrícula rodando em http://localhost:' + PORT));
 }
 module.exports = app;
